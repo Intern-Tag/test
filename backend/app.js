@@ -5,10 +5,11 @@ const Subtask = require("./models/subtask.model");
 
 const app = express();
 
-app.options(
-  "http://localhost:3000",
+app.use(
+  
   cors({
-    optionsSuccessStatus: 200,
+    origin: "http://localhost:3000",
+    credentials: true,
   })
 );
 
@@ -34,7 +35,7 @@ app.post("/api/v1/todo", async function (req, res, next) {
 });
 
 app.patch("/api/v1/todo/:id", async function (req, res, next) {
-  const todoId = req.params.id;
+  const todoId = req.body.id;
   const status = req.body.status;
   const updatedTodo = await Todo.updateStatus(todoId, status);
   // const todos = await Todo.getAll()
@@ -43,7 +44,7 @@ app.patch("/api/v1/todo/:id", async function (req, res, next) {
 
 app.post("/api/v1/todo/:id/subtask", async function (req, res, next) {
   const title = req.body.title;
-  const todoId = req.params.id;
+  const todoId = req.body.todo_id;
   let subtask = new Subtask(title);
   const createdSubtask = await subtask.save(todoId);
   return res.status(200).json({ title, todoId, createdSubtask });
