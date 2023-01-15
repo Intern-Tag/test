@@ -1,42 +1,57 @@
-let supabase = require("../db/config");
+let supabase = require('../db/config')
 
 class Todo {
-  title;
-  status;
-  createdAt;
+  title
+  status
+  createdAt
 
-  constructor(title, status = "PENDING") {
-    this.title = title;
-    this.status = status;
+  constructor (title, status = 'PENDING') {
+    this.title = title
+    this.status = status
   }
 
-  async save() {
+  async save () {
     const { data, error } = await supabase
-      .from("todos")
+      .from('todos')
       .insert({
         title: this.title,
-        status: this.status,
+        status: this.status
       })
-      .select();
-    console.log(error);
-    return data;
+      .select()
+    console.log(error)
+    return data
   }
 
-  static async updateStatus(todoId, status) {
-    let id = parseInt(todoId);
+  static async updateStatus (todoId, status) {
+    let id = parseInt(todoId)
 
     const { data, error } = await supabase
-      .from("todos")
+      .from('todos')
       .update({ status: status })
-      .eq("id", id)
-      .select();
+      .eq('id', id)
+      .select()
 
-    console.log(error);
-    return data;
+    // complete all subtasks if main task is marked complete
+    if (!error && status === 'COMPLETED') {
+      console.log('completing subtasks')
+      const updateResult = await supabase
+        .from('subtasks')
+        .update({ status: status })
+        .eq('todo_id', id)
+        .select()
+
+      console.log(updateResult.data)
+    }
+
+    console.log(error)
+    return data
   }
 
-  static async getAll() {
-    const { data, error } = await supabase.from("todos").select(`
+  static async getAll () {
+    const { data, error } = await supabase
+      .from('todos')
+      .select(
+        `
         id,
         title,
         status,
@@ -47,10 +62,13 @@ class Todo {
             status,
             created_at
         )
-        `);
-    console.log(error);
-    return data;
+        `
+      )
+      .order('created_at', { ascending: false })
+      .order('created_at', { foreignTable: 'subtasks', ascending: true })
+    console.log(error)
+    return data
   }
 }
 
-module.exports = Todo;
+module.exports = Todo
